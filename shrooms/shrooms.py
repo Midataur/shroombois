@@ -4,7 +4,10 @@
 from flask import Flask, request, url_for, render_template, stream_with_context, make_response, send_file, send_from_directory
 from werkzeug.datastructures import Headers
 from werkzeug.wrappers import Response
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from math import floor
