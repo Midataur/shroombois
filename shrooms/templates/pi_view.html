@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Life Cykel - Monitor View</title>
+		<link href="{{ url_for('static', filename='style.css') }}?q=1280549780" type="text/css" rel="stylesheet">
+	</head>
+	<body>
+		<div id="head">
+			<img src="{{ url_for('static', filename='logo.png') }}" id="logo-image"/>
+			<h1 href="/" id="logo">Shroom Room Remote Monitoring</h1>
+			<div id="buttons">
+				<a href="/" class="button">Back to main view</a>
+				<a href="/monitors/{{pi[2]}}/graphs" class="button">View graphs</a>
+				<a href="/download_data/{{pi[2]}}" class="button">Download data</a>
+				<a href="/monitors/{{pi[2]}}/changekey" class="button">Change monitor key</a>
+			</div>
+		</div>
+		<h1>{{ pi[0] }}</h1>
+		{{debug}}
+		<form method="post">
+			Filter to:
+			<select name="timerange">
+				<option value="all" {% if timerange == 'all' %}selected{% endif %}>All time</option>
+				<option value="300" {% if timerange == '300' %}selected{% endif %}>Last 5 minutes</option>
+				<option value="3600" {% if timerange == '3600' %}selected{% endif %}>Last hour</option>
+				<option value="86400" {% if timerange == '86400' %}selected{% endif %}>Last day</option>
+				<option value="604800" {% if timerange == '604800' %}selected{% endif %}>Last week</option>
+				<option value="2678400" {% if timerange == '2678400' %}selected{% endif %}>Last month</option>
+				<option value="31557600" {% if timerange == '31557600' %}selected{% endif %}>Last year</option>
+			</select>
+			Time increment:
+			<select name="inc">
+				<option value="all" {% if inc == 'all' %}selected{% endif %}>All data</option>
+				<option value="300" {% if inc == '300' %}selected{% endif %}>5 minutes</option>
+				<option value="3600" {% if inc == '3600' %}selected{% endif %}>One hour</option>
+				<option value="86400" {% if inc == '86400' %}selected{% endif %}>One day</option>
+				<option value="604800" {% if inc == '604800' %}selected{% endif %}>One week</option>
+				<option value="2678400" {% if inc == '2678400' %}selected{% endif %}>One month</option>
+				<option value="31557600" {% if inc == '31557600' %}selected{% endif %}>One year</option>
+			</select>
+			<input type="submit" value="Submit"></submit>
+		</form>
+		<table>
+		<tr id="table-head"><th>Temperature</th><th>Humidity</th><th>Carbon Dioxide</th><th>Light</th><th>Timestamp</th></tr>
+		{% for x in data %}
+			<tr>
+				<td>Temp: {{ x[1] }}{% if x[1] is number %}°C{% endif %}</td>
+				<td>Humidity: {{ x[2] }}{% if x[2] is number %}%{% endif %}</td>
+				<td>Not connected</td>
+				<td>Not connected</td>
+				<td>{{ x[3] }}</td>
+			</tr>
+		{% endfor %}
+	</body>
+</html>

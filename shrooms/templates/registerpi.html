@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Life Cykel - Register Monitor</title>
+		<link href="{{ url_for('static', filename='style.css') }}?q=1280549780" type="text/css" rel="stylesheet">
+		<script>
+			function getUrlVars() {
+				var vars = {};
+				var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+				vars[key] = value;
+				});
+				return vars;
+			}
+		</script>
+		<script>
+			var errormessages = {'name':'That name is alreday taken',
+								'takenkey':'That key has already been taken',
+								'nokey':'No key inputted'}
+		</script>
+	</head>
+	<body>
+		<div id="head">
+			<img src="{{ url_for('static', filename='logo.png') }}" id="logo-image"/>
+			<h1 href="/" id="logo">Shroom Room Remote Monitoring</h1>
+			<div id="buttons">
+				<a href="/" class="button">Main page</a>
+			</div>
+		</div>
+		<h1>Register a Monitor</h1>
+		<h2 id="fail" class="error"></h2>
+		<script>
+			if( getUrlVars()['fail'] != undefined) {
+				document.getElementById('fail').innerText = errormessages[getUrlVars()['fail']]
+			}
+		</script>
+		<form action="/newpi" method="POST">
+			Name for Monitor:<input type="text" name="name"/>
+			<br/>
+			Key:
+			<br/>
+			<input type="text" name="key"/>
+			<br/>
+			<input type="submit" value="Submit"/>
+		</form>
+	</body>
+</html>

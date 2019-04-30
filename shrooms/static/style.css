@@ -1,0 +1,91 @@
+html, body /*css reset*/
+{
+    margin: 0;
+    padding: 0;
+}
+@font-face {
+	font-family:"Saya TF";
+	src:url('./saya.ttf')
+}
+body {
+	font-family:"Saya TF";
+	text-align:center;
+	background-color:white;
+}
+a:visited {
+	color:blue;
+}
+#head {
+	background-color:green;
+}
+#buttons {
+	background-color:darkgreen;
+}
+form {
+	max-width:15%;
+	margin:auto;
+	padding:2px;
+}
+table {
+	border:1px solid black;
+	max-width:60%;
+	margin:auto;
+	margin-bottom:2px;
+	background-color:white;
+	border-collapse:collapse;
+}
+th, td {
+	border:1px solid black;
+	padding:2px;
+}
+tr:nth-child(0) {
+	background-color:white !important;
+}
+tr:hover {
+	background-color:lightgrey;
+}
+th {
+	background-color:white;
+}
+.button {
+	width:10px;
+	color:black;
+	background-color:white;
+	text-decoration:none;
+	border: solid 1px black;
+}
+.button:visited {
+	color:black;
+}
+.error {
+	color:red;
+}
+#logo {
+	margin:auto;
+	color:white;
+	width:700px;
+	margin-bottom:5px;
+}
+#logo-image {
+	margin:auto;
+	height:5%;
+	width:15%;
+}
+#graph_settings {
+	margin:auto;
+	margin-left:20%;
+	font-size:25px;
+	float:left;
+	line-height:40px;
+}
+#view {
+	white-space:nowrap;
+}
+#graph {
+	margin:auto;
+	margin-right:10%;
+	float:right;
+	border:1px solid black;
+	object-fit:contain;
+	width:40%;
+}
