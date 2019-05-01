@@ -326,19 +326,12 @@ def view_pi(id):
                     if 'inc' in request.form:
                         if request.form['inc'] != 'all':
                             inc = int(request.form['inc'])
-                            try:
-                                latest = float(data[-1][3])
-                            except IndexError:
-                                pass
-                            else:
-                                debug = 12
-                                rn = aest()
-                                for x in range(int((rn-latest)/inc))[::-1]:
-                                    for t in data:
-                                        if int(floor((rn-float(t[3]))/inc)) == x:
-                                            newdata.append(t)
-                                            break
-                                    data = list(newdata)
+                            newdata = []
+                            for t in data:
+                                timest = int(float(t[3]))
+                                if (timest-(timest%60))%inc == 0:
+                                    newdata.append(list(t))
+                            data = list(newdata)
                 else:
                     timerange,inc = None,None
                 #Convert unix stamp to readable string
