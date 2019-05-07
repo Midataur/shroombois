@@ -72,20 +72,22 @@ th {
 	width:15%;
 }
 #graph_settings {
-	margin:auto;
+	margin: auto;
 	margin-left:20%;
+	margin-right: 0%;
 	font-size:25px;
 	float:left;
 	line-height:40px;
+	padding-top: 50px;
 }
 #view {
 	white-space:nowrap;
 }
-#graph {
-	margin:auto;
-	margin-right:10%;
-	float:right;
+#myChart {
 	border:1px solid black;
-	object-fit:contain;
-	width:40%;
+	margin: auto;
+	margin-right: 1%;
+	width: 60% !important;
+	height: 30% !important;
+	float: right;
 }

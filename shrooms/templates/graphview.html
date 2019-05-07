@@ -3,19 +3,10 @@
 	<head>
 		<title>Life Cykel - Monitor View</title>
         <link href="{{ url_for('static', filename='style.css') }}?q=1280549780" type="text/css" rel="stylesheet">
-        <script>
-            function new_graph() {
-                var graph_img = document.getElementById('graph');
-                var form = document.getElementById('graph_settings');
-                var type = form.type.value;
-                var start = form.start.value;
-                var end = form.end.value;
-                var timerange = form.timerange.value;
-                var new_url = '/monitors/{{id}}/graphgen?type='+type+'&start='+start+'&end='+end+'&timerange='+timerange;
-                graph_img.src = new_url;
-                return false;
-            }
-        </script>
+        <!--Include chart.js-->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+        <!--Include jQuery-->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
 	</head>
 	<body>
 		<div id="head">
@@ -30,31 +21,100 @@
         <h1 style="margin-top:1px;">{{name}} graph view</h1>
         <div id="view">
             <form id="graph_settings">
-                Type:<br/>
+                Show me<br/>
                 <select name="type">
-                    <option value="temp">Temperature</option>
-                    <option value="humidity">Humidity</option>
+                    <option value="temp">temperature</option>
+                    <option value="humidity">humidity</option>
                 </select>
                 <br/>
-                Start date (AEST):<br/>
-                <input type="datetime-local" name="start">
-                <br/>
-                End date (AEST):<br/>
-                <input type="datetime-local" name="end">
-                <br/>
-                Timescale:<br/>
+                data from the last<br/>
+                <select name="farback">
+                    <option value="5">five</option>
+                    <option value="10">ten</option>
+                    <option value="20">twenty</option>
+                    <option value="50">fifty</option>
+                </select>
                 <select name="timerange">
-                    <option value="60">1 minute</option>
-                    <option value="3600">1 hour</option>
-                    <option value="86400">1 day</option>
-                    <option value="604800">1 week</option>
-                    <option value="2678400">1 month</option>
-                    <option value="31557600">1 year</option>
+                    <option value="60">minutes</option>
+                    <option value="3600">hours</option>
+                    <option value="86400">days</option>
+                    <option value="604800">weeks</option>
+                    <option value="2678400">months</option>
+                    <option value="31557600">years</option>
                 </select>
                 <br/>
-                <button onclick="new_graph()" type="button">Create graph</button>
+                <button onclick="changeData()" type="button">Create graph</button>
             </form>
-            <img id="graph" src="{{url_for('static',filename='sample_graph.png')}}"/>
+            <canvas id="myChart" class="graph"></canvas>
+            <!--Graph control script-->
+            <script>
+                var ctx = document.getElementById("myChart");
+                var myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                    datasets: [{
+                        label: 'Nothing selected',
+                        fill: false,
+                        borderColor: 'rgb(22, 107, 244)',
+                        data: [0,0,0,0,0,0,0,0,0,0,0,0],
+                        fontSize: 20
+                    }]
+                },
+                options: {
+                    elements: {
+                        line: {
+                            tension: 0
+                        }
+                    },
+                    responsive: true,
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                fontSize: 20
+                            }
+                        }],
+                        xAxes: [{
+                            ticks: {
+                                fontSize: 20
+                            }
+                        }]
+                    },
+                    legend: {
+                        fontSize: 20
+                    }
+                }
+                });
+            </script>
+            <script>
+                function changeData(){
+                    //I apologise for the probably bad jquery
+                    var inc = document.getElementById("graph_settings").timerange.value;
+                    var type = document.getElementById("graph_settings").type.value;
+                    var howfar = document.getElementById("graph_settings").farback.value;
+                    var lookup = {60:"minute", 3600:"hour", 86400:"day", 604800:"week", 2678400:"month", 31557600:"year"};
+                    $.post("./graphs/data", {type:type,timerange:inc,farback:howfar},function(data, status){
+                        var points = JSON.parse(data);
+                        var labels = [];
+                        for(i=1;i<points.length+1;i++){
+                            if(i==1){
+                                labels.push(i+" "+lookup[inc]+" ago");
+                            } else {
+                                labels.push(i+" "+lookup[inc]+"s ago");
+                            }
+                        }
+                        if(type=="temp"){
+                            myChart.data.datasets[0].label = "Temperature";
+                        } else {
+                            myChart.data.datasets[0].label = "Humidity";
+                        }
+                        myChart.data.labels = labels.reverse();
+                        myChart.data.datasets[0].data = points;
+                        myChart.update()
+                    });
+                };
+                changeData()
+            </script>
         </div>
 	</body>
 </html>
