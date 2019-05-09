@@ -11,10 +11,10 @@ def til_interval(timestamp,interv):
 def average(data):
         return int(sum(data)/len(data))
 
-def aest():
-        time_aest = pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pyt                                                                             z.timezone('Australia/Melbourne'))
-        time_aest = time.mktime(time_aest.timetuple())
-        return str(time_aest)
+def utc():
+        time_utc = pytz.utc.localize(datetime.datetime.utcnow())                                                                           z.timezone('Australia/Melbourne'))
+        time_utc = time.mktime(time_utc.timetuple())
+        return str(time_utc)
 
 while True:
         temp = []
@@ -24,8 +24,8 @@ while True:
                 print('Read data!',data)
                 temp.append(data[1])
                 hum.append(data[0])
-                time.sleep(til_interval(int(float(aest())),10))
-        fintime = int(float(aest()))
+                time.sleep(til_interval(int(float(utc())),10))
+        fintime = int(float(utc()))
         fintime -= fintime%60
         fintime = str(fintime)
         temp,hum = average(temp),average(hum)
