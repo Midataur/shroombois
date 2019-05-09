@@ -21,6 +21,7 @@ import csv
 import hashlib
 import time
 import datetime
+import json
 app = Flask(__name__)
 open('shrooms.db')
 
@@ -32,10 +33,10 @@ def getuser(session_id):
     conn.close()
     return user
 
-def aest():
-        time_aest = pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone('Australia/Melbourne'))
-        time_aest = time.mktime(time_aest.timetuple())
-        return time_aest
+def utc():
+    time_utc = pytz.utc.localize(datetime.datetime.utcnow())
+    time_utc = time.mktime(time_utc.timetuple())
+    return time_utc
 
 def htmldate_to_seconds(date):
     date = pytz.timezone('Australia/Melbourne').localize(datetime.datetime.strptime(date,'%Y-%m-%dT%H:%M'))
@@ -83,8 +84,8 @@ def main():
                             try:
                                 latest[y] = list(latest[y])
                                 latest[y][2] = datetime.datetime.fromtimestamp(float(latest[y][2]))
-                                latest[y][2] = pytz.utc.localize(latest[y][2]).astimezone(pytz.timezone('Australia/Melbourne'))
-                                latest[y][2] = latest[y][2].strftime('%a %b %d %H:%M:%S %Y AEST')
+                                latest[y][2] = pytz.utc.localize(latest[y][2])
+                                latest[y][2] = latest[y][2].strftime('%a %b %d %H:%M:%S %Y')
                             except:
                                 pass
                         data[x[1]] = latest[::-1]
@@ -186,7 +187,10 @@ def new_pi():
                         return '<script>window.location = "/newpi?fail=name"</script>'
                     #Register
                     curs.execute('SELECT id FROM pis ORDER BY id DESC')
-                    newid = curs.fetchone()[0]+1
+                    try:
+                        newid = curs.fetchone()[0]+1
+                    except:
+                        newid = 0
                     curs.execute('INSERT INTO pis (name,user,id,key) VALUES (?,?,?,?)',(request.form['name'],user,newid,request.form['key']))
                     conn.commit()
                     conn.close()
@@ -303,15 +307,6 @@ def view_pi(id):
                 timerange = 'all'
                 debug = 'doot'
                 if request.method == 'POST':
-                    #Convert all time data to unix timestamps
-                    for t in range(len(data)):
-                        try:
-                            data[t] = list(data[t])
-                            data[t][3] = datetime.datetime.strptime(data[t][3],'%a %b %d %H:%M:%S %Y AEST')
-                        except:
-                            pass
-                        else:
-                            data[t][3] = (data[t][3]-datetime.datetime.fromtimestamp(0)).total_seconds()
                     #Filter for age
                     if 'timerange' in request.form:
                         timerange = request.form['timerange']
@@ -343,13 +338,53 @@ def view_pi(id):
                         data[y] = list(data[y])
                         data[y][3] = datetime.datetime.fromtimestamp(float(data[y][3]))
                         data[y][3] = pytz.utc.localize(data[y][3]).astimezone(pytz.timezone('Australia/Melbourne'))
-                        data[y][3] = data[y][3].strftime('%a %b %d %H:%M:%S %Y AEST')
+                        data[y][3] = data[y][3].strftime('%a %b %d %H:%M:%S %Y utc')
                     except:
                         pass
                 conn.close()
                 return render_template('pi_view.html',pi=pi,data=data,timerange=timerange,inc=str(inc))
     conn.close()
     return 'You have insufficent privileges to view this monitor<br/><a href="/">Back to main page</a>'
+
+@app.route('/monitors/<id>/graphs/data',methods=['POST'])
+def as_json(id):
+    conn = sqlite3.connect('shrooms.db')
+    curs = conn.cursor()
+    #Check if user has correct privileges
+    if 'logged_in' in request.cookies and 'session_id' in request.cookies:
+        if request.cookies['logged_in'] == 'true' and request.cookies['session_id'] != 'None':
+            curs.execute('SELECT * FROM sessions WHERE id = ?;',(float(request.cookies['session_id']),))
+            user = curs.fetchone()
+            if user != None:
+                user = user[0]
+            curs.execute('SELECT user FROM pis WHERE id = ?',(id,))
+            owner = curs.fetchone()
+            if owner != None:
+                owner = owner[0]
+            else:
+                conn.close()
+                return 'Selected monitor does not exist'
+            if user == owner or user == 'admin':
+                if request.form['type'] == 'temp':
+                    curs.execute('SELECT temp,time FROM data WHERE pi = ?',(id,))
+                else:
+                    curs.execute('SELECT humidity,time FROM data WHERE pi = ?',(id,))
+                data = curs.fetchall()
+                new_data = []
+                cur_time = utc()
+                cur_time -= cur_time%60
+                times_only = [int(x[1]) for x in data]
+                for x in range(int(request.form['farback'])):
+                    if cur_time-(int(request.form['timerange'])*x) in times_only:
+                        new_data.append(data[times_only.index(cur_time-(int(request.form['timerange'])*x))][0])
+                    else:
+                        new_data.append(None)
+                data = json.dumps(list(new_data)[::-1])
+                #data = [cur_time-(int(request.form['timerange'])*x),times_only]
+                #Render
+                conn.close()
+                return render_template('rawjson.html',data=data)
+    conn.close()
 
 @app.route('/monitors/<id>/graphs')
 def graph_maker(id):
@@ -375,141 +410,6 @@ def graph_maker(id):
                 #Render
                 conn.close()
                 return render_template('graphview.html',id=id,name=name)
-    conn.close()
-    return 'You have insufficent privileges to view this data<br/><a href="/">Back to main page</a>'
-
-@app.route('/monitors/<id>/graphgen')
-def gen_graph(id):
-    timerange_lookup = {'60':'Minutes','3600':'Hours','86400':'Days','604800':'Weeks','2678400':'Months','31557600':'Years'}
-    #Get variables
-    try:
-        graph_type = request.args['type']
-        start = htmldate_to_seconds(request.args['start'])
-        end = htmldate_to_seconds(request.args['end'])
-        timerange = int(request.args['timerange'])
-    except ValueError:
-        return 'Something went wrong, please try again'
-    #Make graph
-    if graph_type not in ['temp','humidity'] or str(timerange) not in timerange_lookup:
-        return 'Invalid graph settings<br/><a href="/">Back to main page</a>'
-    conn = sqlite3.connect('shrooms.db')
-    curs = conn.cursor()
-    #Check if user has correct privileges
-    if 'logged_in' in request.cookies and 'session_id' in request.cookies:
-        if request.cookies['logged_in'] == 'true' and request.cookies['session_id'] != 'None':
-            curs.execute('SELECT * FROM sessions WHERE id = ?;',(float(request.cookies['session_id']),))
-            user = curs.fetchone()
-            if user != None:
-                user = user[0]
-            curs.execute('SELECT user FROM pis WHERE id = ?',(id,))
-            owner = curs.fetchone()
-            if owner!= None:
-                owner = owner[0]
-            #Get data
-            if user == owner or user == 'admin':
-                #Get data
-                if graph_type == 'temp':
-                    curs.execute('SELECT temp,time FROM data WHERE pi = ?;',(id,))
-                elif graph_type == 'humidity':
-                    curs.execute('SELECT humidity,time FROM data WHERE pi = ?;',(id,))
-                else:
-                    conn.close()
-                    return 'Something went wrong, please try again'
-                data = curs.fetchall()
-                #Convert data to timestamps
-                for t in range(len(data)):
-                    try:
-                        data[t] = list(data[t])
-                        data[t][1] = datetime.datetime.strptime(data[t][1],'%a %b %d %H:%M:%S %Y AEST')
-                        data[t][1] = pytz.utc.localize(data[t][1]).astimezone(pytz.timezone('Australia/Melbourne'))
-                    except:
-                        pass
-                    else:
-                        epoch = pytz.utc.localize(datetime.datetime.fromtimestamp(0)).astimezone(pytz.timezone('Australia/Melbourne'))
-                        data[t][1] = (data[t][1]-epoch).total_seconds()
-                #Filter
-                newdata = []
-                data = data[::-1]
-                for x in range(int((end-start)/timerange)):
-                    found = False
-                    for t in data:
-                        if int(floor((end-float(t[1]))/timerange)) == x:
-                            found = True
-                            newdata.append(t[0])
-                            break
-                    if found == False:
-                        newdata.append(None)
-                #Check if data exists
-                empty = True
-                for x in newdata:
-                    if x != None:
-                        empty = False
-                        break
-                    else:
-                        empty = True
-                if empty:
-                    conn.close()
-                    return send_file(app.root_path+'\static\errornodata.png')
-                #Deal with gaps in data
-                fixed = []
-                for x in range(len(newdata)):
-                    if newdata[x] == None:
-                        try:
-                            neighbours = [newdata[x-1],newdata[x+1]]
-                        except IndexError:
-                            fixed.append(None)
-                            continue
-                        else:
-                            if neighbours != [None,None]:
-                                if None not in neighbours:
-                                    fixed.append((neighbours[0]+neighbours[1])/2.0)
-                                else:
-                                    neighbours.pop(neighbours.index(None))
-                                    fixed.append(neighbours[0])
-                            else:
-                                fixed.append(None)
-                    else:
-                        fixed.append(newdata[x])
-                data = list(fixed)
-                nononedata = [x for x in data if x != None]
-                if nononedata == []:
-                    nononedata = [0]
-                #Make graph
-                fig = Figure()
-                axis = fig.add_subplot(1, 1, 1)
-                ys = np.array(data[::-1])
-                xs = np.array(range(int((end-start)/timerange)))
-                axis.set_xlim(0,(end-start)/timerange)
-                if min(nononedata) < 0:
-                    axis.set_ylim(ymin=min(nononedata))
-                else:
-                    axis.set_ylim(ymin=0)
-                axis.set_xlabel(timerange_lookup[str(timerange)]+' since start')
-                #Get ylabel
-                if graph_type == 'temp':
-                    axis.set_ylabel('Degrees celsius')
-                elif graph_type == 'humidity':
-                    axis.set_ylabel('Humidity percentage')
-                else:
-                    axis.set_ylabel('?')
-                axis.set_xticks(range(int((end-start)/timerange)),10)
-                yticks = range(0,110,10) if min(nononedata) > 0 else range(min(nononedata),110,10)
-                axis.set_yticks(yticks)
-                axis.plot(xs, ys)
-                #Get title
-                if graph_type == 'temp':
-                    fig.suptitle('Temperature over time')
-                elif graph_type == 'humidity':
-                    fig.suptitle('Humidity over time')
-                else:
-                    fig.suptitle('Unknown graph type')
-                canvas = FigureCanvas(fig)
-                output = StringIO()
-                canvas.print_png(output)
-                response = make_response(output.getvalue())
-                response.mimetype = 'image/png'
-                conn.close()
-                return response
     conn.close()
     return 'You have insufficent privileges to view this data<br/><a href="/">Back to main page</a>'
 
