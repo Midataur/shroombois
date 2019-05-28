@@ -263,15 +263,11 @@ def log_data():
     conn = sqlite3.connect('shrooms.db')
     curs = conn.cursor()
     #Check for bad inputs
-    ##Forgot a variable
-    if 'key' not in request.form or 'temp' not in request.form or 'hum' not in request.form or 'time' not in request.form:
-        conn.close()
-        return 'Forgot a variable, try again'
     ##Key not registered
     curs.execute('SELECT * FROM pis WHERE key = ?',(request.form['key'],))
     if curs.fetchone() == None:
         conn.close()
-        return 'Key is already taken'
+        return 'Invalid key'
     #Log data
     curs.execute('SELECT id FROM pis WHERE key = ?',(request.form['key'],))
     id = curs.fetchone()[0]
