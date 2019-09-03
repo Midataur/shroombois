@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+    <title>Life Cykel - {% block title%}{% endblock %}</title>
+    <link href="{{ url_for('static', filename='style.css') }}?q=123" type="text/css" rel="stylesheet">
+	<link href="{{ url_for('static', filename='reset.css') }}" type="text/css" rel="stylesheet">
+	<link href="https://cdn.darcylf.me/kube721/dist/css/kube.space.css" type="text/css" rel="stylesheet">
+	<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://gitcdn.xyz/repo/ehne/6e3aecbf876bd1b84be8c4355f1deba3/raw/b0a68fb5be6078a3a61ef2ec2ce7798b191fecde/SF.css">
+		
+    {% endblock %}
+</head>
+<body>
+    
+    <header class="navbar " id="myHeader">
+			<div class="navbar__container is-container is-items-middle">
+				<div>
+				<img src="{{ url_for('static', filename='logo.png') }}" alt="" class="navbar__image">
+					</div>
+				<div class="is-push-right is-hidden-mobile ">
+					<div class="">
+                            {% block navone %} {%endblock%}
+					</div>
+				</div>
+				<div class="is-shown-mobile is-inset-top-16 is-container-row fukol">
+					<div class="fukol-grid">
+                            {% block navtwo %} {%endblock%}
+					</div>
+				</div>
+				</div>
+				
+		</header>
+    {% block content %}{% endblock %}
+
+</body>
+</html>

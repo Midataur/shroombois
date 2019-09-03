@@ -1,0 +1,8 @@
+{
+  "name": "shroombois",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "mac": ". env/bin/activate && cd shrooms && FLASK_APP=shrooms.py flask run"
+  }
+}

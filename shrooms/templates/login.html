@@ -1,36 +1,41 @@
-<!DOCTYPE html>
-<html>
-	<head>
-		<title>Life Cykel - Login</title>
-		<link rel="stylesheet" href="/static/css/reset.css?q=1280549780" type="text/css" media="screen" charset="utf-8" />
-		<link href="{{ url_for('static', filename='style.css') }}?q=123" type="text/css" rel="stylesheet">
-		<script>
-			function getUrlVars() {
-				var vars = {};
-				var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
-				vars[key] = value;
-				});
-				return vars;
-			}
-		</script>
-	</head>
-	<body>
-		<div id="head">
-			<img src="{{ url_for('static', filename='logo.png') }}" id="logo-image"/>
-			<h1 href="/" id="logo">Shroom Room Remote Monitoring</h1>
-			<div id="buttons">
-				<a href="/newuser" class="button">Create a new account</a>
+{% extends "base.html" %}
+{% block title %}login{% endblock %}
+{%block navone%}
+<a href="/newuser" class="navbar__button button is-small">Sign up</a>
+<a href="#" class="navbar__button button is-small">About</a>
+{%endblock%}
+{% block content %}
+		
+		<main class="is-width-medium is-center is-inset-x-20 is-v-100">
+			<h2 class="page-title is-text-centered is-outset-y-12">Login</h2>
+			<!--login box-->
+			<div class="container is-stack-16 is-centered">
+				<div class="is-100">
+					<div class="is-inset-16">
+						<script>
+							let url = new URL(window.location); // get url of window, and save it to url
+							let params = new URLSearchParams(url.search.slice(1)); // get the second half of the url (after the "?")							
+							$("#errorText").toggleClass("is-hidden");
+							// run when document loads
+							$(document).ready(function(){
+								if(params.get("success")) {
+									$("#password").addClass("is-error");
+									$("#username").addClass("is-error");
+									$("#errorText").toggleClass("is-hidden");
+								}
+								// you can do this with any other query!
+							});
+			
+						</script>
+						<form action="/validate" method="POST">
+							<input type="text" name="user" class="is-input-text" placeholder="Username" id="username"/>
+							<input type="password" name="pass" class="is-input-text " placeholder="Password" id="password"/>
+							<h4 class="is-outset-y-none is-error is-inset-x-8" id="errorText">Username and Password do not match</h4>
+							<input type="submit" value="Submit" class="button is-orange is-form"/>
+						</form>
+					</div>
+				</div>
 			</div>
-		</div>
-		<h1 class="header">Login</h1>
-		<h2 id="failed" class="error"></h2>
-		<script>if(getUrlVars()['success']=='false'){document.getElementById('failed').innerText = "Login failed, try again";}</script>
-		<form action="/validate" method="POST">
-			Username:<input type="text" name="user"/>
-			<br />
-			Password:<input type="password" name="pass"/>
-			<br />
-			<input type="submit" value="Submit"/>
-		</form>
-	</body>
-</html>
+
+		</main>
+{% endblock %}

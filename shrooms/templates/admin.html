@@ -1,19 +1,16 @@
-<!DOCTYPE html>
-<html>
-	<head>
-		<title>Life Cykel - View monitors</title>
-		<link href="{{ url_for('static', filename='style.css') }}?q=1280549780" type="text/css" rel="stylesheet">
-	</head>
-	<body>
-		<div id="head">
-			<img src="{{ url_for('static', filename='logo.png') }}" id="logo-image"/>
-			<h1 href="/" id="logo">Shroom Room Remote Monitoring</h1>
-			<div id="buttons">
-				<a href="/newpi" class="button">Register a new monitor</a>
-				<a href="/logout" class="button">Logout</a>
-			</div>
-		</div>
-		<h1>All monitors</h1>
+{% extends "base.html" %}
+{% block title %}admin{% endblock %}
+{% block navone %}
+<a href="/newpi" class="navbar__button button is-small">Register a new monitor</a>
+<a href="/logout" class="navbar__button button is-small">Logout</a>
+{%endblock%}
+{% block navtwo %}
+<a href="/newpi" class="navbar__button button is-small">Register a new monitor</a>
+<a href="/logout" class="navbar__button button is-small">Logout</a>
+{%endblock%}
+{% block content %}
+				
+		<h2 class="page-title">All monitors</h2>
 		<table class="pis">
 			<tr id="table-head"><th>Monitor</th><th>Owner</th><th>Temperature</th><th>Humidity</th><th>Carbon Dioxide</th><th>Light</th><th>Timestamp</th></tr>
 			{% for x in pis %}
@@ -29,5 +26,4 @@
 					</tr>
 				</div>
 			{% endfor %}
-	</body>
-</html>
+{%endblock%}
